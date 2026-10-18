@@ -1,1 +1,123 @@
-<h1>UNIPLAN</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniPlan - Organizador Académico Universitario</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Encabezado Principal -->
+    <header class="header">
+        <div class="container">
+            <div class="logo-area">
+                <h1>UniPlan 🎓</h1>
+                <p>Organizador Académico Universitario</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        
+        <!-- Sección de Estadísticas e Indicadores -->
+        <section class="stats-card">
+            <h2>Resumen Académico</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-number" id="stat-total">0</span>
+                    <span class="stat-label">Total Tareas</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number text-pending" id="stat-pending">0</span>
+                    <span class="stat-label">Pendientes</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number text-success" id="stat-completed">0</span>
+                    <span class="stat-label">Completadas</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number text-danger" id="stat-overdue">0</span>
+                    <span class="stat-label">Vencidas</span>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar">0%</div>
+            </div>
+        </section>
+
+        <!-- Layout en Dos Columnas -->
+        <div class="dashboard-grid">
+            
+            <!-- Columna Izquierda: Formulario de Registro -->
+            <section class="card form-card">
+                <h2>Registrar Nueva Tarea</h2>
+                <form id="task-form">
+                    <div class="form-group">
+                        <label for="task-name">Nombre de la Tarea *</label>
+                        <input type="text" id="task-name" placeholder="Ej. Informe de Algoritmos" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="course-name">Curso / Asignatura *</label>
+                        <input type="text" id="course-name" placeholder="Ej. Programación I" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="due-date">Fecha de Entrega *</label>
+                        <input type="date" id="due-date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priority">Nivel de Prioridad *</label>
+                        <select id="priority" required>
+                            <option value="Alta">Alta 🔴</option>
+                            <option value="Media" selected>Media 🟡</option>
+                            <option value="Baja">Baja 🟢</option>
+                        </select>
+                    </div>
+
+                    <div id="form-alert" class="alert hidden"></div>
+
+                    <button type="submit" class="btn btn-primary">➕ Guardar Tarea</button>
+                </form>
+            </section>
+
+            <!-- Columna Derecha: Controles y Lista de Tareas -->
+            <section class="card list-card">
+                <div class="list-header">
+                    <h2>Mis Tareas Académicas</h2>
+                    
+                    <!-- Filtros -->
+                    <div class="filter-controls">
+                        <select id="filter-priority">
+                            <option value="TODAS">Todas las Prioridades</option>
+                            <option value="Alta">Prioridad Alta</option>
+                            <option value="Media">Prioridad Media</option>
+                            <option value="Baja">Prioridad Baja</option>
+                        </select>
+
+                        <select id="filter-status">
+                            <option value="TODOS">Todos los Estados</option>
+                            <option value="PENDIENTE">Solo Pendientes</option>
+                            <option value="COMPLETADA">Solo Completadas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Lista de Contenedor de Tareas -->
+                <div id="tasks-container" class="tasks-container">
+                    <p class="empty-msg">No hay tareas registradas. Utiliza el formulario para agregar tu primera actividad.</p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 UniPlan - Proyecto de Emprendimiento Universitario</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
