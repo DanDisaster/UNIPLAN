@@ -1,439 +1,409 @@
-    <!-- ==========================================================================
-         LÓGICA JAVASCRIPT Y MANEJO DE MULTI-USUARIO
-         ========================================================================== -->
-    <script>
-        /**
-         * UniPlan - Lógica de Programación y Autenticación Multiusuario
-         */
+/* Variables Globales y Reset */
+:root {
+    --primary-color: #2b5ce7;
+    --primary-hover: #1e42a8;
+    --bg-color: #f4f6f9;
+    --card-bg: #ffffff;
+    --text-color: #2d3748;
+    --text-muted: #718096;
+    --border-color: #e2e8f0;
+    
+    --priority-high: #e53e3e;
+    --priority-medium: #dd6b20;
+    --priority-low: #38a169;
+}
 
-        // Variables de Estado en Memoria
-        let currentUser = null; // Guardará { id, name, email } del usuario activo
-        let tasks = [];         // Lista de tareas del usuario actualmente autenticado
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-        // Referencias al DOM
-        const authContainer = document.getElementById('auth-container');
-        const appContainer = document.getElementById('app-container');
-        
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const userDisplay = document.getElementById('user-display');
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
 
-        const taskForm = document.getElementById('task-form');
-        const taskNameInput = document.getElementById('task-name');
-        const courseNameInput = document.getElementById('course-name');
-        const dueDateInput = document.getElementById('due-date');
-        const priorityInput = document.getElementById('priority');
-        const formAlert = document.getElementById('form-alert');
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
 
-        const tasksContainer = document.getElementById('tasks-container');
-        const filterPriority = document.getElementById('filter-priority');
-        const filterStatus = document.getElementById('filter-status');
-        const searchInput = document.getElementById('search-input');
+.hidden {
+    display: none !important;
+}
 
-        const statTotal = document.getElementById('stat-total');
-        const statPending = document.getElementById('stat-pending');
-        const statCompleted = document.getElementById('stat-completed');
-        const statOverdue = document.getElementById('stat-overdue');
-        const progressBar = document.getElementById('progress-bar');
+/* Pantalla de Autenticación (Login / Registro) */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    padding: 20px;
+}
 
-        const editModal = document.getElementById('edit-modal');
-        const editForm = document.getElementById('edit-form');
+.auth-card {
+    background: white;
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
 
-        // INICIALIZACIÓN DE LA APLICACIÓN
-        document.addEventListener('DOMContentLoaded', () => {
-            // Establecer fecha mínima como HOY para evitar entregas en el pasado
-            const today = new Date().toISOString().split('T')[0];
-            dueDateInput.min = today;
-            document.getElementById('edit-date').min = today;
+.auth-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-            // Verificar si existe una sesión activa almacenada
-            checkActiveSession();
-        });
+.auth-header h1 {
+    color: var(--primary-color);
+    font-size: 2rem;
+}
 
-        /* ==========================================================================
-           GESTIÓN DE AUTENTICACIÓN MULTI-USUARIO (SISTEMA DE CUENTAS)
-           ========================================================================== */
+.auth-header p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
 
-        function switchAuthMode(mode) {
-            const tabLogin = document.getElementById('tab-login');
-            const tabRegister = document.getElementById('tab-register');
-            
-            showAuthAlert('', 'clear');
+.auth-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
 
-            if (mode === 'login') {
-                tabLogin.classList.add('active');
-                tabRegister.classList.remove('active');
-                loginForm.classList.remove('hidden');
-                registerForm.classList.add('hidden');
-            } else {
-                tabRegister.classList.add('active');
-                tabLogin.classList.remove('active');
-                registerForm.classList.remove('hidden');
-                loginForm.classList.add('hidden');
-            }
-        }
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: none;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+}
 
-        // Registro de Cuenta
-        registerForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const name = document.getElementById('reg-name').value.trim();
-            const email = document.getElementById('reg-email').value.trim().toLowerCase();
-            const password = document.getElementById('reg-password').value;
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
 
-            let users = JSON.parse(localStorage.getItem('uniplan_users') || '[]');
+.auth-form .form-group {
+    margin-bottom: 15px;
+}
 
-            // Validar si el correo ya fue registrado
-            if (users.some(u => u.email === email)) {
-                showAuthAlert('El correo ya se encuentra registrado. Inicie sesión.', 'error', 'reg-alert');
-                return;
-            }
+/* Header de la Aplicación */
+.header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 20px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
 
-            const newUser = {
-                id: 'usr_' + Date.now(),
-                name,
-                email,
-                password // En producción real se debe encriptar/hash
-            };
+.header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
 
-            users.push(newUser);
-            localStorage.setItem('uniplan_users', JSON.stringify(users));
+.user-session-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-            showAuthAlert('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.', 'success', 'reg-alert');
-            registerForm.reset();
-            setTimeout(() => switchAuthMode('login'), 1500);
-        });
+.btn-head {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
 
-        // Inicio de Sesión
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value.trim().toLowerCase();
-            const password = document.getElementById('login-password').value;
+.btn-head:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
 
-            const users = JSON.parse(localStorage.getItem('uniplan_users') || '[]');
-            const user = users.find(u => u.email === email && u.password === password);
+.backup-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 15px;
+}
 
-            if (!user) {
-                showAuthAlert('Correo o contraseña incorrectos.', 'error', 'auth-alert');
-                return;
-            }
+.btn-head-dark {
+    background: #e2e8f0;
+    color: #2d3748;
+    border: 1px solid #cbd5e0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
 
-            // Iniciar Sesión Exitosa
-            loginForm.reset();
-            setActiveSession(user);
-        });
+.label-file {
+    display: inline-block;
+}
 
-        function setActiveSession(user) {
-            currentUser = { id: user.id, name: user.name, email: user.email };
-            localStorage.setItem('uniplan_current_user', JSON.stringify(currentUser));
-            
-            // Cargar datos exclusivos de este usuario
-            loadUserTasks();
-            
-            // Alternar Vistas
-            authContainer.classList.add('hidden');
-            appContainer.classList.remove('hidden');
-            userDisplay.textContent = `👤 ${currentUser.name}`;
-            
-            renderTasks();
-        }
+/* Tablero de Métricas */
+.main-content {
+    margin-top: 25px;
+    margin-bottom: 40px;
+}
 
-        function checkActiveSession() {
-            const savedUser = localStorage.getItem('uniplan_current_user');
-            if (savedUser) {
-                try {
-                    const user = JSON.parse(savedUser);
-                    setActiveSession(user);
-                } catch (e) {
-                    logout();
-                }
-            }
-        }
+.stats-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
 
-        function logout() {
-            // Limpiar datos en memoria de la sesión actual
-            currentUser = null;
-            tasks = [];
-            localStorage.removeItem('uniplan_current_user');
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 15px;
+    margin: 15px 0;
+    text-align: center;
+}
 
-            // Limpiar interfaz y mostrar login
-            appContainer.classList.add('hidden');
-            authContainer.classList.remove('hidden');
-            switchAuthMode('login');
-        }
+.stat-box {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
 
-        function showAuthAlert(msg, type, elementId = 'auth-alert') {
-            const alertBox = document.getElementById(elementId);
-            if (type === 'clear') {
-                alertBox.classList.add('hidden');
-                return;
-            }
-            alertBox.textContent = msg;
-            alertBox.className = `alert alert-${type}`;
-            alertBox.classList.remove('hidden');
-        }
+.stat-number {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: bold;
+}
 
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
 
-        /* ==========================================================================
-           GESTIÓN DE TAREAS POR USUARIO Y PERSISTENCIA AISLADA
-           ========================================================================== */
+.text-pending { color: var(--priority-medium); }
+.text-success { color: var(--priority-low); }
+.text-danger { color: var(--priority-high); }
 
-        // Carga las tareas mapeadas individualmente por ID de usuario
-        function loadUserTasks() {
-            if (!currentUser) return;
-            const storageKey = `uniplan_tasks_${currentUser.id}`;
-            const stored = localStorage.getItem(storageKey);
-            if (stored) {
-                try {
-                    tasks = JSON.parse(stored);
-                } catch (e) {
-                    tasks = [];
-                }
-            } else {
-                tasks = [];
-            }
-        }
+.progress-bar-container {
+    background: #edf2f7;
+    border-radius: 10px;
+    height: 20px;
+    overflow: hidden;
+}
 
-        // Guarda las tareas exclusivamente en la clave del usuario activo
-        function saveUserTasks() {
-            if (!currentUser) return;
-            const storageKey = `uniplan_tasks_${currentUser.id}`;
-            localStorage.setItem(storageKey, JSON.stringify(tasks));
-        }
+.progress-bar {
+    background: var(--primary-color);
+    height: 100%;
+    width: 0%;
+    color: white;
+    font-size: 0.75rem;
+    line-height: 20px;
+    text-align: center;
+    transition: width 0.4s ease;
+}
 
-        // Crear Tarea
-        taskForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const name = taskNameInput.value.trim();
-            const course = courseNameInput.value.trim();
-            const dueDate = dueDateInput.value;
-            const priority = priorityInput.value;
+/* Layout Dashboard */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 25px;
+}
 
-            if (name === '' || course === '' || dueDate === '') {
-                showAlert('Por favor, complete todos los campos requeridos.', 'error');
-                return;
-            }
+@media (max-width: 850px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
-            const newTask = {
-                id: 'task_' + Date.now(),
-                name,
-                course,
-                dueDate,
-                priority,
-                completed: false,
-                createdAt: new Date().toISOString()
-            };
+.card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
 
-            tasks.push(newTask);
-            saveUserTasks();
-            
-            taskForm.reset();
-            showAlert('¡Tarea registrada con éxito!', 'success');
-            renderTasks();
-        });
+/* Formularios e Inputs */
+.form-group {
+    margin-bottom: 18px;
+}
 
-        // Ordenar cronológicamente (más cercana primero)
-        function sortTasksByDate(taskList) {
-            return taskList.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-        }
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
 
-        // Filtrado y Búsqueda en tiempo real
-        function getFilteredTasks() {
-            const selectedPriority = filterPriority.value;
-            const selectedStatus = filterStatus.value;
-            const query = searchInput.value.toLowerCase().trim();
+.form-group input, .form-group select, .search-box input, .filter-controls select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
 
-            return tasks.filter(task => {
-                const matchesPriority = (selectedPriority === 'TODAS') || (task.priority === selectedPriority);
-                
-                let matchesStatus = true;
-                if (selectedStatus === 'PENDIENTE') matchesStatus = !task.completed;
-                else if (selectedStatus === 'COMPLETADA') matchesStatus = task.completed;
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
 
-                const matchesSearch = task.name.toLowerCase().includes(query) || 
-                                      task.course.toLowerCase().includes(query);
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
 
-                return matchesPriority && matchesStatus && matchesSearch;
-            });
-        }
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
 
-        // Actualización de Métricas Académicas
-        function updateStatistics() {
-            const total = tasks.length;
-            const completed = tasks.filter(t => t.completed).length;
-            const pending = total - completed;
-            
-            const todayStr = new Date().toISOString().split('T')[0];
-            const overdue = tasks.filter(t => !t.completed && t.dueDate < todayStr).length;
+/* Alertas */
+.alert {
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-top: 15px;
+}
+.alert-error { background: #fed7d7; color: #9b2c2c; }
+.alert-success { background: #c6f6d5; color: #22543d; }
 
-            const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+/* Controles de Lista y Búsqueda */
+.search-box {
+    margin: 12px 0;
+}
 
-            statTotal.textContent = total;
-            statPending.textContent = pending;
-            statCompleted.textContent = completed;
-            statOverdue.textContent = overdue;
+.filter-controls {
+    display: flex;
+    gap: 10px;
+}
 
-            progressBar.style.width = `${percentage}%`;
-            progressBar.textContent = `${percentage}%`;
-        }
+.tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
 
-        // Renderizado Dinámico de la Lista de Tareas
-        function renderTasks() {
-            let filtered = getFilteredTasks();
-            filtered = sortTasksByDate(filtered);
+/* Tarjetas de Tareas */
+.task-item {
+    border: 1px solid var(--border-color);
+    border-left: 5px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+}
 
-            tasksContainer.innerHTML = '';
-            const todayStr = new Date().toISOString().split('T')[0];
+.task-item.priority-Alta { border-left-color: var(--priority-high); }
+.task-item.priority-Media { border-left-color: var(--priority-medium); }
+.task-item.priority-Baja { border-left-color: var(--priority-low); }
 
-            if (filtered.length === 0) {
-                tasksContainer.innerHTML = `<p class="empty-msg">No hay tareas que coincidan con la búsqueda o selección.</p>`;
-            } else {
-                filtered.forEach(task => {
-                    const taskCard = document.createElement('div');
-                    
-                    const isOverdue = !task.completed && task.dueDate < todayStr;
-                    const isSoon = !task.completed && !isOverdue && isDueSoon(task.dueDate);
+.task-item.completed {
+    opacity: 0.6;
+    background: #f7fafc;
+}
 
-                    let statusBadge = '';
-                    if (isOverdue) statusBadge = `<span class="badge badge-danger">⚠️ Vencida</span>`;
-                    else if (isSoon) statusBadge = `<span class="badge badge-warning">⏳ Vence pronto</span>`;
+.task-item.completed .task-title {
+    text-decoration: line-through;
+}
 
-                    taskCard.className = `task-item priority-${task.priority} ${task.completed ? 'completed' : ''} ${isOverdue ? 'is-overdue' : ''}`;
-                    
-                    taskCard.innerHTML = `
-                        <div class="task-info">
-                            <h3 class="task-title">${escapeHTML(task.name)} ${statusBadge}</h3>
-                            <p class="task-meta">📖 <strong>Curso:</strong> ${escapeHTML(task.course)} | 📅 <strong>Entrega:</strong> ${task.dueDate} | 🏷️ <strong>Prioridad:</strong> ${task.priority}</p>
-                        </div>
-                        <div class="task-actions">
-                            <button onclick="toggleTaskStatus('${task.id}')" class="btn-sm btn-complete">
-                                ${task.completed ? '↩️ Reactivar' : '✅ Completar'}
-                            </button>
-                            <button onclick="openEditModal('${task.id}')" class="btn-sm btn-edit">✏️ Editar</button>
-                            <button onclick="deleteTask('${task.id}')" class="btn-sm btn-delete">🗑️ Eliminar</button>
-                        </div>
-                    `;
-                    tasksContainer.appendChild(taskCard);
-                });
-            }
+.task-item.is-overdue {
+    background-color: #fff5f5;
+    border-right: 3px solid var(--priority-high);
+}
 
-            updateStatistics();
-        }
+.task-info h3 {
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+}
 
-        function isDueSoon(dueDateStr) {
-            const today = new Date();
-            const dueDate = new Date(dueDateStr);
-            const diffTime = dueDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays >= 0 && diffDays <= 2;
-        }
+.task-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
 
-        // Edición de Tareas (Modal)
-        function openEditModal(id) {
-            const task = tasks.find(t => t.id === id);
-            if (!task) return;
+.badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+.badge-danger { background-color: #fed7d7; color: #9b2c2c; }
+.badge-warning { background-color: #feebc8; color: #9c4221; }
 
-            document.getElementById('edit-id').value = task.id;
-            document.getElementById('edit-name').value = task.name;
-            document.getElementById('edit-course').value = task.course;
-            document.getElementById('edit-date').value = task.dueDate;
-            document.getElementById('edit-priority').value = task.priority;
+.task-actions {
+    display: flex;
+    gap: 6px;
+}
 
-            editModal.classList.remove('hidden');
-        }
+.btn-sm {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
 
-        function closeEditModal() {
-            editModal.classList.add('hidden');
-        }
+.btn-complete { background: #e6fffa; color: #234e52; }
+.btn-edit { background: #ebf8ff; color: #2b6cb0; }
+.btn-delete { background: #fff5f5; color: #9b2c2c; }
 
-        editForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const id = document.getElementById('edit-id').value;
-            
-            tasks = tasks.map(t => {
-                if (t.id === id) {
-                    return {
-                        ...t,
-                        name: document.getElementById('edit-name').value.trim(),
-                        course: document.getElementById('edit-course').value.trim(),
-                        dueDate: document.getElementById('edit-date').value,
-                        priority: document.getElementById('edit-priority').value
-                    };
-                }
-                return t;
-            });
+.empty-msg {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 30px 0;
+}
 
-            saveUserTasks();
-            closeEditModal();
-            renderTasks();
-        });
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
 
-        // Cambiar Estado y Eliminar
-        function toggleTaskStatus(id) {
-            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-            saveUserTasks();
-            renderTasks();
-        }
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px;
+}
 
-        function deleteTask(id) {
-            if (confirm('¿Desea eliminar esta tarea definitivamente?')) {
-                tasks = tasks.filter(t => t.id !== id);
-                saveUserTasks();
-                renderTasks();
-            }
-        }
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
 
-        // Exportación e Importación de Copia de Seguridad
-        function exportData() {
-            if (tasks.length === 0) {
-                alert('No hay tareas guardadas para exportar.');
-                return;
-            }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `uniplan_backup_${currentUser.name.replace(/\s+/g, '_')}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
+.btn-secondary { background: #e2e8f0; color: #4a5568; }
 
-        function importData(event) {
-            const fileReader = new FileReader();
-            fileReader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported)) {
-                        tasks = imported;
-                        saveUserTasks();
-                        renderTasks();
-                        alert('¡Copia de seguridad importada con éxito!');
-                    } else {
-                        alert('El archivo no contiene un formato de tareas válido.');
-                    }
-                } catch (err) {
-                    alert('Error al leer el archivo JSON.');
-                }
-            };
-            fileReader.readAsText(event.target.files[0]);
-        }
-
-        // Escuchadores para Filtros
-        filterPriority.addEventListener('change', renderTasks);
-        filterStatus.addEventListener('change', renderTasks);
-        searchInput.addEventListener('input', renderTasks);
-
-        // Funciones Auxiliares
-        function showAlert(msg, type) {
-            formAlert.textContent = msg;
-            formAlert.className = `alert alert-${type}`;
-            formAlert.classList.remove('hidden');
-            setTimeout(() => { formAlert.classList.add('hidden'); }, 3000);
-        }
-
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
-        }
-    </script>
-</body>
-</html>
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border-color);
+}
