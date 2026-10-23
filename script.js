@@ -1,409 +1,387 @@
-/* Variables Globales y Reset */
-:root {
-    --primary-color: #2b5ce7;
-    --primary-hover: #1e42a8;
-    --bg-color: #f4f6f9;
-    --card-bg: #ffffff;
-    --text-color: #2d3748;
-    --text-muted: #718096;
-    --border-color: #e2e8f0;
+/**
+ * UniPlan - Lógica de Programación y Sistema Multiusuario
+ */
+
+// Estado del Sistema
+let currentUser = null;
+let tasks = [];
+
+// Elementos de Autenticación
+const authScreen = document.getElementById('auth-screen');
+const appScreen = document.getElementById('app-screen');
+const formLogin = document.getElementById('form-login');
+const formRegister = document.getElementById('form-register');
+const authAlert = document.getElementById('auth-alert');
+const userDisplay = document.getElementById('user-display');
+
+// Elementos de Tareas
+const taskForm = document.getElementById('task-form');
+const taskNameInput = document.getElementById('task-name');
+const courseNameInput = document.getElementById('course-name');
+const dueDateInput = document.getElementById('due-date');
+const priorityInput = document.getElementById('priority');
+const formAlert = document.getElementById('form-alert');
+
+const tasksContainer = document.getElementById('tasks-container');
+const filterPriority = document.getElementById('filter-priority');
+const filterStatus = document.getElementById('filter-status');
+const searchInput = document.getElementById('search-input');
+
+// Elementos de Estadísticas
+const statTotal = document.getElementById('stat-total');
+const statPending = document.getElementById('stat-pending');
+const statCompleted = document.getElementById('stat-completed');
+const statOverdue = document.getElementById('stat-overdue');
+const progressBar = document.getElementById('progress-bar');
+
+// Modal Edición
+const editModal = document.getElementById('edit-modal');
+const editForm = document.getElementById('edit-form');
+
+// Inicialización de la Aplicación
+document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    dueDateInput.min = today;
+    document.getElementById('edit-date').min = today;
+
+    checkActiveSession();
+});
+
+// --- SISTEMA MULTIUSUARIO (LOGIN / REGISTRO) ---
+
+function switchAuthTab(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
     
-    --priority-high: #e53e3e;
-    --priority-medium: #dd6b20;
-    --priority-low: #38a169;
+    formLogin.classList.toggle('hidden', tab !== 'login');
+    formRegister.classList.toggle('hidden', tab !== 'register');
+    authAlert.classList.add('hidden');
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+// Registro de Usuario
+formRegister.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim().toLowerCase();
+    const pass = document.getElementById('reg-pass').value;
+
+    const users = getUsersFromStorage();
+
+    if (users.some(u => u.email === email)) {
+        showAuthAlert('El usuario o correo ya está registrado.', 'error');
+        return;
+    }
+
+    const newUser = { id: 'usr_' + Date.now(), name, email, pass };
+    users.push(newUser);
+    localStorage.setItem('uniplan_users', JSON.stringify(users));
+
+    loginUser(newUser);
+});
+
+// Iniciar Sesión
+formLogin.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const pass = document.getElementById('login-pass').value;
+
+    const users = getUsersFromStorage();
+    const user = users.find(u => u.email === email && u.pass === pass);
+
+    if (!user) {
+        showAuthAlert('Credenciales incorrectas.', 'error');
+        return;
+    }
+
+    loginUser(user);
+});
+
+function loginUser(user) {
+    currentUser = user;
+    localStorage.setItem('uniplan_active_user', JSON.stringify(user));
+    
+    authScreen.classList.add('hidden');
+    appScreen.classList.remove('hidden');
+    userDisplay.innerHTML = `👤 Usuario: <strong>${user.name}</strong>`;
+
+    loadTasksForUser();
+    renderTasks();
 }
 
-body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    line-height: 1.6;
+function logout() {
+    currentUser = null;
+    tasks = [];
+    localStorage.removeItem('uniplan_active_user');
+    
+    appScreen.classList.add('hidden');
+    authScreen.classList.remove('hidden');
+    formLogin.reset();
+    formRegister.reset();
 }
 
-.container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* Pantalla de Autenticación (Login / Registro) */
-.auth-wrapper {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 20px;
-}
-
-.auth-card {
-    background: white;
-    width: 100%;
-    max-width: 400px;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
-
-.auth-header {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.auth-header h1 {
-    color: var(--primary-color);
-    font-size: 2rem;
-}
-
-.auth-header p {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-}
-
-.auth-tabs {
-    display: flex;
-    margin-bottom: 20px;
-    border-bottom: 2px solid var(--border-color);
-}
-
-.tab-btn {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    background: none;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-}
-
-.tab-btn.active {
-    color: var(--primary-color);
-    border-bottom: 2px solid var(--primary-color);
-}
-
-.auth-form .form-group {
-    margin-bottom: 15px;
-}
-
-/* Header de la Aplicación */
-.header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    color: white;
-    padding: 20px 0;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.header-flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.user-session-bar {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.btn-head {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-
-.btn-head:hover {
-    background: rgba(255, 255, 255, 0.35);
-}
-
-.backup-toolbar {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.btn-head-dark {
-    background: #e2e8f0;
-    color: #2d3748;
-    border: 1px solid #cbd5e0;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-
-.label-file {
-    display: inline-block;
-}
-
-/* Tablero de Métricas */
-.main-content {
-    margin-top: 25px;
-    margin-bottom: 40px;
-}
-
-.stats-card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 15px;
-    margin: 15px 0;
-    text-align: center;
-}
-
-.stat-box {
-    background: #f8fafc;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.stat-number {
-    display: block;
-    font-size: 1.8rem;
-    font-weight: bold;
-}
-
-.stat-label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.text-pending { color: var(--priority-medium); }
-.text-success { color: var(--priority-low); }
-.text-danger { color: var(--priority-high); }
-
-.progress-bar-container {
-    background: #edf2f7;
-    border-radius: 10px;
-    height: 20px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    background: var(--primary-color);
-    height: 100%;
-    width: 0%;
-    color: white;
-    font-size: 0.75rem;
-    line-height: 20px;
-    text-align: center;
-    transition: width 0.4s ease;
-}
-
-/* Layout Dashboard */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.6fr;
-    gap: 25px;
-}
-
-@media (max-width: 850px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
+function checkActiveSession() {
+    const active = localStorage.getItem('uniplan_active_user');
+    if (active) {
+        try {
+            loginUser(JSON.parse(active));
+        } catch (e) {
+            logout();
+        }
     }
 }
 
-.card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+function getUsersFromStorage() {
+    const stored = localStorage.getItem('uniplan_users');
+    return stored ? JSON.parse(stored) : [];
 }
 
-/* Formularios e Inputs */
-.form-group {
-    margin-bottom: 18px;
+function showAuthAlert(msg, type) {
+    authAlert.textContent = msg;
+    authAlert.className = `alert alert-${type}`;
 }
 
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 6px;
-    font-size: 0.9rem;
+// --- GESTIÓN DE TAREAS POR USUARIO ---
+
+function loadTasksForUser() {
+    if (!currentUser) return;
+    const key = `uniplan_tasks_${currentUser.id}`;
+    const stored = localStorage.getItem(key);
+    tasks = stored ? JSON.parse(stored) : [];
 }
 
-.form-group input, .form-group select, .search-box input, .filter-controls select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 0.95rem;
+function saveTasksToStorage() {
+    if (!currentUser) return;
+    const key = `uniplan_tasks_${currentUser.id}`;
+    localStorage.setItem(key, JSON.stringify(tasks));
 }
 
-.btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
+// Evento: Crear Tarea
+taskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const name = taskNameInput.value.trim();
+    const course = courseNameInput.value.trim();
+    const dueDate = dueDateInput.value;
+    const priority = priorityInput.value;
+
+    if (name === '' || course === '' || dueDate === '') {
+        showFormAlert('Por favor complete todos los campos.', 'error');
+        return;
+    }
+
+    const newTask = {
+        id: Date.now().toString(),
+        name,
+        course,
+        dueDate,
+        priority,
+        completed: false
+    };
+
+    tasks.push(newTask);
+    saveTasksToStorage();
+    
+    taskForm.reset();
+    showFormAlert('¡Tarea guardada exitosamente!', 'success');
+    renderTasks();
+});
+
+// Ordenamiento Cronológico
+function sortTasksByDate(taskList) {
+    return taskList.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 }
 
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
+// Filtrado y Búsqueda
+function getFilteredTasks() {
+    const selectedPriority = filterPriority.value;
+    const selectedStatus = filterStatus.value;
+    const query = searchInput.value.toLowerCase().trim();
+
+    return tasks.filter(task => {
+        const matchesPriority = (selectedPriority === 'TODAS') || (task.priority === selectedPriority);
+        
+        let matchesStatus = true;
+        if (selectedStatus === 'PENDIENTE') matchesStatus = !task.completed;
+        else if (selectedStatus === 'COMPLETADA') matchesStatus = task.completed;
+
+        const matchesSearch = task.name.toLowerCase().includes(query) || 
+                              task.course.toLowerCase().includes(query);
+
+        return matchesPriority && matchesStatus && matchesSearch;
+    });
 }
 
-.btn-primary:hover {
-    background: var(--primary-hover);
+// Actualizar Estadísticas
+function updateStatistics() {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.completed).length;
+    const pending = total - completed;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const overdue = tasks.filter(t => !t.completed && t.dueDate < today).length;
+
+    const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+    statTotal.textContent = total;
+    statPending.textContent = pending;
+    statCompleted.textContent = completed;
+    statOverdue.textContent = overdue;
+
+    progressBar.style.width = `${percentage}%`;
+    progressBar.textContent = `${percentage}%`;
 }
 
-/* Alertas */
-.alert {
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    margin-top: 15px;
-}
-.alert-error { background: #fed7d7; color: #9b2c2c; }
-.alert-success { background: #c6f6d5; color: #22543d; }
+// Renderizado de Interfaz
+function renderTasks() {
+    let filtered = getFilteredTasks();
+    filtered = sortTasksByDate(filtered);
 
-/* Controles de Lista y Búsqueda */
-.search-box {
-    margin: 12px 0;
-}
+    tasksContainer.innerHTML = '';
+    const todayStr = new Date().toISOString().split('T')[0];
 
-.filter-controls {
-    display: flex;
-    gap: 10px;
-}
+    if (filtered.length === 0) {
+        tasksContainer.innerHTML = `<p class="empty-msg">No hay tareas registradas para esta vista.</p>`;
+    } else {
+        filtered.forEach(task => {
+            const taskCard = document.createElement('div');
+            
+            const isOverdue = !task.completed && task.dueDate < todayStr;
+            const isSoon = !task.completed && !isOverdue && isDueSoon(task.dueDate);
 
-.tasks-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 15px;
-}
+            let statusBadge = '';
+            if (isOverdue) statusBadge = `<span class="badge badge-danger">⚠️ Vencida</span>`;
+            else if (isSoon) statusBadge = `<span class="badge badge-warning">⏳ Vence pronto</span>`;
 
-/* Tarjetas de Tareas */
-.task-item {
-    border: 1px solid var(--border-color);
-    border-left: 5px solid var(--border-color);
-    border-radius: 8px;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #fff;
-}
+            taskCard.className = `task-item priority-${task.priority} ${task.completed ? 'completed' : ''} ${isOverdue ? 'is-overdue' : ''}`;
+            
+            taskCard.innerHTML = `
+                <div class="task-info">
+                    <h3 class="task-title">${escapeHTML(task.name)} ${statusBadge}</h3>
+                    <p class="task-meta">📖 <strong>Curso:</strong> ${escapeHTML(task.course)} | 📅 <strong>Entrega:</strong> ${task.dueDate} | 🏷️ <strong>Prioridad:</strong> ${task.priority}</p>
+                </div>
+                <div class="task-actions">
+                    <button onclick="toggleTaskStatus('${task.id}')" class="btn-sm btn-complete">
+                        ${task.completed ? '↩️ Reactivar' : '✅ Completar'}
+                    </button>
+                    <button onclick="openEditModal('${task.id}')" class="btn-sm btn-edit">✏️ Editar</button>
+                    <button onclick="deleteTask('${task.id}')" class="btn-sm btn-delete">🗑️ Eliminar</button>
+                </div>
+            `;
+            tasksContainer.appendChild(taskCard);
+        });
+    }
 
-.task-item.priority-Alta { border-left-color: var(--priority-high); }
-.task-item.priority-Media { border-left-color: var(--priority-medium); }
-.task-item.priority-Baja { border-left-color: var(--priority-low); }
-
-.task-item.completed {
-    opacity: 0.6;
-    background: #f7fafc;
+    updateStatistics();
 }
 
-.task-item.completed .task-title {
-    text-decoration: line-through;
+function isDueSoon(dueDateStr) {
+    const today = new Date();
+    const dueDate = new Date(dueDateStr);
+    const diffTime = dueDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 2;
 }
 
-.task-item.is-overdue {
-    background-color: #fff5f5;
-    border-right: 3px solid var(--priority-high);
+// Modal Edición
+function openEditModal(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    document.getElementById('edit-id').value = task.id;
+    document.getElementById('edit-name').value = task.name;
+    document.getElementById('edit-course').value = task.course;
+    document.getElementById('edit-date').value = task.dueDate;
+    document.getElementById('edit-priority').value = task.priority;
+
+    editModal.classList.remove('hidden');
 }
 
-.task-info h3 {
-    font-size: 1.05rem;
-    margin-bottom: 4px;
+function closeEditModal() {
+    editModal.classList.add('hidden');
 }
 
-.task-meta {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+editForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('edit-id').value;
+    
+    tasks = tasks.map(t => {
+        if (t.id === id) {
+            return {
+                ...t,
+                name: document.getElementById('edit-name').value.trim(),
+                course: document.getElementById('edit-course').value.trim(),
+                dueDate: document.getElementById('edit-date').value,
+                priority: document.getElementById('edit-priority').value
+            };
+        }
+        return t;
+    });
+
+    saveTasksToStorage();
+    closeEditModal();
+    renderTasks();
+});
+
+// Cambiar Estado & Eliminar
+function toggleTaskStatus(id) {
+    tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+    saveTasksToStorage();
+    renderTasks();
 }
 
-.badge {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
-.badge-danger { background-color: #fed7d7; color: #9b2c2c; }
-.badge-warning { background-color: #feebc8; color: #9c4221; }
-
-.task-actions {
-    display: flex;
-    gap: 6px;
+function deleteTask(id) {
+    if (confirm('¿Desea eliminar esta tarea de su lista?')) {
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasksToStorage();
+        renderTasks();
+    }
 }
 
-.btn-sm {
-    padding: 6px 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
+// Respaldo de Datos JSON
+function exportData() {
+    if (tasks.length === 0) {
+        alert('No hay tareas para exportar.');
+        return;
+    }
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `uniplan_${currentUser.email}_backup.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
 }
 
-.btn-complete { background: #e6fffa; color: #234e52; }
-.btn-edit { background: #ebf8ff; color: #2b6cb0; }
-.btn-delete { background: #fff5f5; color: #9b2c2c; }
-
-.empty-msg {
-    text-align: center;
-    color: var(--text-muted);
-    padding: 30px 0;
+function importData(event) {
+    const fileReader = new FileReader();
+    fileReader.onload = function(e) {
+        try {
+            const importedTasks = JSON.parse(e.target.result);
+            if (Array.isArray(importedTasks)) {
+                tasks = importedTasks;
+                saveTasksToStorage();
+                renderTasks();
+                alert('¡Tareas importadas con éxito!');
+            }
+        } catch (err) {
+            alert('El archivo cargado no es un JSON válido.');
+        }
+    };
+    fileReader.readAsText(event.target.files[0]);
 }
 
-/* Modal */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+// Filtros Escuchadores
+filterPriority.addEventListener('change', renderTasks);
+filterStatus.addEventListener('change', renderTasks);
+searchInput.addEventListener('input', renderTasks);
+
+// Auxiliares
+function showFormAlert(msg, type) {
+    formAlert.textContent = msg;
+    formAlert.className = `alert alert-${type}`;
+    setTimeout(() => { formAlert.className = 'alert hidden'; }, 3000);
 }
 
-.modal-content {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 450px;
-}
-
-.modal-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.btn-secondary { background: #e2e8f0; color: #4a5568; }
-
-.footer {
-    text-align: center;
-    padding: 20px;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    border-top: 1px solid var(--border-color);
+function escapeHTML(str) {
+    return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 }
