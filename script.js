@@ -310,6 +310,30 @@ window.addEventListener('DOMContentLoaded', () => {
   const inputFecha = document.getElementById('tarea-fecha');
   if (inputFecha) inputFecha.value = hoyISO;
 
+  // Enlace directo de pestañas Login / Crear Cuenta
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+  const authForm = document.getElementById('auth-form');
+
+  if (tabLogin) {
+    tabLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      cambiarModoAuth('login');
+    });
+  }
+
+  if (tabRegister) {
+    tabRegister.addEventListener('click', (e) => {
+      e.preventDefault();
+      cambiarModoAuth('registro');
+    });
+  }
+
+  if (authForm) {
+    authForm.addEventListener('submit', manejarAutenticacion);
+  }
+
+  // Verificar si ya había una sesión abierta
   const usuarioActivo = gestorCuentas.obtenerUsuarioActivo();
   if (usuarioActivo) {
     inicializarAppConUsuario(usuarioActivo);
@@ -318,20 +342,50 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function cambiarModoAuth(modo) {
   modoAuthActual = modo;
-  document.getElementById('tab-login').classList.toggle('active', modo === 'login');
-  document.getElementById('tab-register').classList.toggle('active', modo === 'registro');
-  document.getElementById('grupo-nombre').classList.toggle('hidden', modo === 'login');
-  document.getElementById('btn-auth-submit').textContent =
-    modo === 'login' ? 'Ingresar a UniPlan' : 'Crear Cuenta y Guardar Datos';
-  document.getElementById('auth-error').classList.add('hidden');
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+  const grupoNombre = document.getElementById('grupo-nombre');
+  const btnSubmit = document.getElementById('btn-auth-submit');
+  const errorBox = document.getElementById('auth-error');
+
+  tabLogin.classList.toggle('active', modo === 'login');
+  tabRegister.classList.toggle('active', modo === 'registro');
+
+  if (modo === 'registro') {
+    grupoNombre.classList.remove('hidden');
+    grupoNombre.style.display = 'block';
+    btnSubmit.textContent = 'Crear Cuenta y Guardar Datos';
+  } else {
+    grupoNombre.classList.add('hidden');
+    grupoNombre.style.display = 'none';
+    btnSubmit.textContent = 'Ingresar a UniPlan';
+  }
+
+  errorBox.classList.add('hidden');
 }
 
 function manejarAutenticacion(e) {
-  e.preventDefault();
-  const nombre = document.getElementById('auth-nombre').value;
-  const email = document.getElementById('auth-email').value;
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  const nombre = document.getElementById('auth-nombre').value.trim();
+  const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   const errorBox = document.getElementById('auth-error');
+
+  if (!email || !email.includes('@')) {
+    errorBox.textContent = 'Ingresa un correo electrónico válido.';
+    errorBox.classList.remove('hidden');
+    return false;
+  }
+
+  if (!password || password.length < 6) {
+    errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.remove('hidden');
+    return false;
+  }
 
   try {
     const usuario =
@@ -346,13 +400,20 @@ function manejarAutenticacion(e) {
     errorBox.textContent = err.message;
     errorBox.classList.remove('hidden');
   }
+  return false;
 }
 
 function inicializarAppConUsuario(usuario) {
   sistema = new SistemaUniPlan(usuario, gestorCuentas);
 
-  document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('app-screen').classList.remove('hidden');
+  const authScreen = document.getElementById('auth-screen');
+  const appScreen = document.getElementById('app-screen');
+
+  authScreen.classList.add('hidden');
+  authScreen.style.display = 'none';
+
+  appScreen.classList.remove('hidden');
+  appScreen.style.display = 'block';
 
   document.getElementById('user-display-name').textContent = usuario.nombre;
   document.getElementById('user-display-email').textContent = usuario.email;
@@ -375,9 +436,18 @@ function cerrarSesion() {
   gestorCuentas.cerrarSesion();
   sistema = null;
   if (intervaloMonitor) clearInterval(intervaloMonitor);
-  document.getElementById('app-screen').classList.add('hidden');
-  document.getElementById('auth-screen').classList.remove('hidden');
+
+  const authScreen = document.getElementById('auth-screen');
+  const appScreen = document.getElementById('app-screen');
+
+  appScreen.classList.add('hidden');
+  appScreen.style.display = 'none';
+
+  authScreen.classList.remove('hidden');
+  authScreen.style.display = 'flex';
+
   document.getElementById('auth-form').reset();
+  cambiarModoAuth('login');
 }
 
 function cambiarVista(nombreVista, btn) {
