@@ -1,626 +1,369 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniPlan - Organizador Académico Universitario</title>
-    <style>
-        /* Variables Globales y Reset */
-:root {
-    --primary-color: #2b5ce7;
-    --primary-hover: #1e42a8;
-    --bg-color: #f4f6f9;
-    --card-bg: #ffffff;
-    --text-color: #2d3748;
-    --text-muted: #718096;
-    --border-color: #e2e8f0;
-    
-    --priority-high: #e53e3e;
-    --priority-medium: #dd6b20;
-    --priority-low: #38a169;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    line-height: 1.6;
-}
-
-.container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* Pantalla de Autenticación (Login / Registro) */
-.auth-wrapper {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    padding: 20px;
-}
-
-.auth-card {
-    background: white;
-    width: 100%;
-    max-width: 400px;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
-
-.auth-header {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.auth-header h1 {
-    color: var(--primary-color);
-    font-size: 2rem;
-}
-
-.auth-header p {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-}
-
-.auth-tabs {
-    display: flex;
-    margin-bottom: 20px;
-    border-bottom: 2px solid var(--border-color);
-}
-
-.tab-btn {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    background: none;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-}
-
-.tab-btn.active {
-    color: var(--primary-color);
-    border-bottom: 2px solid var(--primary-color);
-}
-
-.auth-form .form-group {
-    margin-bottom: 15px;
-}
-
-/* Header de la Aplicación */
-.header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    color: white;
-    padding: 20px 0;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.header-flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.user-session-bar {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.btn-head {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-
-.btn-head:hover {
-    background: rgba(255, 255, 255, 0.35);
-}
-
-.backup-toolbar {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.btn-head-dark {
-    background: #e2e8f0;
-    color: #2d3748;
-    border: 1px solid #cbd5e0;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-
-.label-file {
-    display: inline-block;
-}
-
-/* Tablero de Métricas */
-.main-content {
-    margin-top: 25px;
-    margin-bottom: 40px;
-}
-
-.stats-card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 15px;
-    margin: 15px 0;
-    text-align: center;
-}
-
-.stat-box {
-    background: #f8fafc;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.stat-number {
-    display: block;
-    font-size: 1.8rem;
-    font-weight: bold;
-}
-
-.stat-label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.text-pending { color: var(--priority-medium); }
-.text-success { color: var(--priority-low); }
-.text-danger { color: var(--priority-high); }
-
-.progress-bar-container {
-    background: #edf2f7;
-    border-radius: 10px;
-    height: 20px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    background: var(--primary-color);
-    height: 100%;
-    width: 0%;
-    color: white;
-    font-size: 0.75rem;
-    line-height: 20px;
-    text-align: center;
-    transition: width 0.4s ease;
-}
-
-/* Layout Dashboard */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.6fr;
-    gap: 25px;
-}
-
-@media (max-width: 850px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-
-/* Formularios e Inputs */
-.form-group {
-    margin-bottom: 18px;
-}
-
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 6px;
-    font-size: 0.9rem;
-}
-
-.form-group input, .form-group select, .search-box input, .filter-controls select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 0.95rem;
-}
-
-.btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: var(--primary-hover);
-}
-
-/* Alertas */
-.alert {
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    margin-top: 15px;
-}
-.alert-error { background: #fed7d7; color: #9b2c2c; }
-.alert-success { background: #c6f6d5; color: #22543d; }
-
-/* Controles de Lista y Búsqueda */
-.search-box {
-    margin: 12px 0;
-}
-
-.filter-controls {
-    display: flex;
-    gap: 10px;
-}
-
-.tasks-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 15px;
-}
-
-/* Tarjetas de Tareas */
-.task-item {
-    border: 1px solid var(--border-color);
-    border-left: 5px solid var(--border-color);
-    border-radius: 8px;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #fff;
-}
-
-.task-item.priority-Alta { border-left-color: var(--priority-high); }
-.task-item.priority-Media { border-left-color: var(--priority-medium); }
-.task-item.priority-Baja { border-left-color: var(--priority-low); }
-
-.task-item.completed {
-    opacity: 0.6;
-    background: #f7fafc;
-}
-
-.task-item.completed .task-title {
-    text-decoration: line-through;
-}
-
-.task-item.is-overdue {
-    background-color: #fff5f5;
-    border-right: 3px solid var(--priority-high);
-}
-
-.task-info h3 {
-    font-size: 1.05rem;
-    margin-bottom: 4px;
-}
-
-.task-meta {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.badge {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
-.badge-danger { background-color: #fed7d7; color: #9b2c2c; }
-.badge-warning { background-color: #feebc8; color: #9c4221; }
-
-.task-actions {
-    display: flex;
-    gap: 6px;
-}
-
-.btn-sm {
-    padding: 6px 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
-}
-
-.btn-complete { background: #e6fffa; color: #234e52; }
-.btn-edit { background: #ebf8ff; color: #2b6cb0; }
-.btn-delete { background: #fff5f5; color: #9b2c2c; }
-
-.empty-msg {
-    text-align: center;
-    color: var(--text-muted);
-    padding: 30px 0;
-}
-
-/* Modal */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 450px;
-}
-
-.modal-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.btn-secondary { background: #e2e8f0; color: #4a5568; }
-
-.footer {
-    text-align: center;
-    padding: 20px;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    border-top: 1px solid var(--border-color);
-}
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UniPlan 🎓 | Organizador Académico Universitario</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- PANTALLA DE ACCESO / REGISTRO DE CUENTA -->
+  <section id="auth-screen" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-badge">🎓</div>
+        <h1>UniPlan</h1>
+        <p>Organizador Académico Universitario</p>
+      </div>
 
-    <!-- MÓDULO DE AUTENTICACIÓN (LOGIN / REGISTRO) -->
-    <div id="auth-screen" class="auth-wrapper">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h1>UniPlan 🎓</h1>
-                <p>Organizador Académico Universitario</p>
-            </div>
-            
-            <div class="auth-tabs">
-                <button id="tab-login" class="tab-btn active" onclick="switchAuthTab('login')">Iniciar Sesión</button>
-                <button id="tab-register" class="tab-btn" onclick="switchAuthTab('register')">Registrarse</button>
-            </div>
+      <div class="auth-tabs">
+        <button type="button" id="tab-login" class="auth-tab active" onclick="cambiarModoAuth('login')">
+          Iniciar Sesión
+        </button>
+        <button type="button" id="tab-register" class="auth-tab" onclick="cambiarModoAuth('registro')">
+          Crear Cuenta
+        </button>
+      </div>
 
-            <!-- Formulario Iniciar Sesión -->
-            <form id="form-login" class="auth-form">
-                <div class="form-group">
-                    <label for="login-email">Correo Universitario / Usuario</label>
-                    <input type="text" id="login-email" placeholder="estudiante@unip.edu.pe" required>
-                </div>
-                <div class="form-group">
-                    <label for="login-pass">Contraseña</label>
-                    <input type="password" id="login-pass" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Ingresar a UniPlan</button>
-            </form>
-
-            <!-- Formulario Registro -->
-            <form id="form-register" class="auth-form hidden">
-                <div class="form-group">
-                    <label for="reg-name">Nombre Completo</label>
-                    <input type="text" id="reg-name" placeholder="Juan Pérez" required>
-                </div>
-                <div class="form-group">
-                    <label for="reg-email">Correo o Nombre de Usuario</label>
-                    <input type="text" id="reg-email" placeholder="juan.perez" required>
-                </div>
-                <div class="form-group">
-                    <label for="reg-pass">Contraseña</label>
-                    <input type="password" id="reg-pass" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Crear Cuenta</button>
-            </form>
-
-            <div id="auth-alert" class="alert hidden"></div>
+      <form id="auth-form" onsubmit="manejarAutenticacion(event)">
+        <div id="grupo-nombre" class="form-group hidden">
+          <label for="auth-nombre">Nombre Completo</label>
+          <input type="text" id="auth-nombre" placeholder="Ej. Daniel Bracamonte" />
         </div>
-    </div>
 
-    <!-- PANEL PRINCIPAL APLICACIÓN (Oculto hasta iniciar sesión) -->
-    <div id="app-screen" class="hidden">
-        <header class="header">
-            <div class="container header-flex">
-                <div class="logo-area">
-                    <h1>UniPlan 🎓</h1>
-                    <p>Organizador Académico Universitario</p>
-                </div>
-                
-                <div class="user-session-bar">
-                    <span id="user-display">👤 Usuario: <strong>Estudiante</strong></span>
-                    <button onclick="logout()" class="btn-head btn-logout">🚪 Cerrar Sesión</button>
-                </div>
-            </div>
-        </header>
-
-        <main class="container main-content">
-            <!-- Barra de Respaldo JSON -->
-            <div class="backup-toolbar">
-                <button onclick="exportData()" class="btn-sm btn-head-dark">📥 Exportar Backup (JSON)</button>
-                <label for="import-file" class="btn-sm btn-head-dark label-file">📤 Importar Backup</label>
-                <input type="file" id="import-file" accept=".json" onchange="importData(event)" style="display: none;">
-            </div>
-
-            <!-- Resumen Estadístico -->
-            <section class="stats-card">
-                <h2>Resumen Académico</h2>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <span class="stat-number" id="stat-total">0</span>
-                        <span class="stat-label">Total Tareas</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-number text-pending" id="stat-pending">0</span>
-                        <span class="stat-label">Pendientes</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-number text-success" id="stat-completed">0</span>
-                        <span class="stat-label">Completadas</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-number text-danger" id="stat-overdue">0</span>
-                        <span class="stat-label">Vencidas</span>
-                    </div>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" id="progress-bar">0%</div>
-                </div>
-            </section>
-
-            <div class="dashboard-grid">
-                <!-- Columna Izquierda: Registro -->
-                <section class="card form-card">
-                    <h2>Registrar Nueva Tarea</h2>
-                    <form id="task-form">
-                        <div class="form-group">
-                            <label for="task-name">Nombre de la Tarea *</label>
-                            <input type="text" id="task-name" placeholder="Ej. Informe de Algoritmos" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="course-name">Curso / Asignatura *</label>
-                            <input type="text" id="course-name" placeholder="Ej. Programación I" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="due-date">Fecha de Entrega *</label>
-                            <input type="date" id="due-date" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="priority">Nivel de Prioridad *</label>
-                            <select id="priority" required>
-                                <option value="Alta">Alta 🔴</option>
-                                <option value="Media" selected>Media 🟡</option>
-                                <option value="Baja">Baja 🟢</option>
-                            </select>
-                        </div>
-
-                        <div id="form-alert" class="alert hidden"></div>
-
-                        <button type="submit" class="btn btn-primary">➕ Guardar Tarea</button>
-                    </form>
-                </section>
-
-                <!-- Columna Derecha: Lista de Tareas -->
-                <section class="card list-card">
-                    <div class="list-header">
-                        <h2>Mis Tareas Académicas</h2>
-                        
-                        <div class="search-box">
-                            <input type="search" id="search-input" placeholder="🔍 Buscar por tarea o curso...">
-                        </div>
-
-                        <div class="filter-controls">
-                            <select id="filter-priority">
-                                <option value="TODAS">Todas las Prioridades</option>
-                                <option value="Alta">Prioridad Alta</option>
-                                <option value="Media">Prioridad Media</option>
-                                <option value="Baja">Prioridad Baja</option>
-                            </select>
-
-                            <select id="filter-status">
-                                <option value="TODOS">Todos los Estados</option>
-                                <option value="PENDIENTE">Solo Pendientes</option>
-                                <option value="COMPLETADA">Solo Completadas</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div id="tasks-container" class="tasks-container">
-                        <p class="empty-msg">No hay tareas registradas. Agrega tu primera actividad.</p>
-                    </div>
-                </section>
-            </div>
-        </main>
-
-        <footer class="footer">
-            <p>&copy; 2026 UniPlan - Organizador Académico Universitario</p>
-        </footer>
-    </div>
-
-    <!-- Modal para Editar Tarea -->
-    <div id="edit-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h2>✏️ Editar Tarea</h2>
-            <form id="edit-form">
-                <input type="hidden" id="edit-id">
-                <div class="form-group">
-                    <label for="edit-name">Nombre de la Tarea</label>
-                    <input type="text" id="edit-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-course">Curso / Asignatura</label>
-                    <input type="text" id="edit-course" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-date">Fecha de Entrega</label>
-                    <input type="date" id="edit-date" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-priority">Prioridad</label>
-                    <select id="edit-priority">
-                        <option value="Alta">Alta 🔴</option>
-                        <option value="Media">Media 🟡</option>
-                        <option value="Baja">Baja 🟢</option>
-                    </select>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" onclick="closeEditModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                </div>
-            </form>
+        <div class="form-group">
+          <label for="auth-email">Correo Electrónico Universitario / Personal</label>
+          <input type="email" id="auth-email" required placeholder="estudiante@universidad.edu.pe" />
         </div>
-    </div>
 
-    <script src="script.js"></script>
+        <div class="form-group">
+          <label for="auth-password">Contraseña</label>
+          <input type="password" id="auth-password" required minlength="6" placeholder="Mínimo 6 caracteres" />
+        </div>
+
+        <div id="auth-error" class="alert-box error hidden"></div>
+
+        <button type="submit" id="btn-auth-submit" class="btn btn-primary btn-block">
+          Ingresar a UniPlan
+        </button>
+      </form>
+
+      <div class="auth-footer-info">
+        <p>🔒 Tus tareas y alertas se guardan automáticamente dentro de tu cuenta registrada, sin necesidad de exportar archivos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- APLICACIÓN PRINCIPAL -->
+  <div id="app-screen" class="app-container hidden">
+    <!-- HEADER -->
+    <header class="main-header">
+      <div class="header-content">
+        <div class="header-brand">
+          <h1>UniPlan 🎓</h1>
+          <p>Organizador Académico Universitario</p>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-outline-light btn-sm" onclick="activarNotificacionesPush()" title="Activar notificaciones Push">
+            🔔 <span id="estado-push-texto">Activar Push</span>
+          </button>
+          <button type="button" class="btn btn-outline-light btn-sm" onclick="abrirModalConfig()" title="Configurar Correo y Google Calendar">
+            ⚙️ Integraciones
+          </button>
+          <div class="user-pill">
+            <span>👤 <strong id="user-display-name">Estudiante</strong></span>
+            <small id="user-display-email" class="user-email-tag"></small>
+          </div>
+          <button type="button" class="btn btn-danger-soft btn-sm" onclick="cerrarSesion()">
+            Salir
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAVEGACIÓN DE VISTAS -->
+    <nav class="sub-nav">
+      <div class="sub-nav-inner">
+        <button class="nav-pill active" data-view="dashboard" onclick="cambiarVista('dashboard', this)">
+          📋 Panel y Tareas
+        </button>
+        <button class="nav-pill" data-view="calendario" onclick="cambiarVista('calendario', this)">
+          📅 Calendario Académico
+        </button>
+        <button class="nav-pill" data-view="alertas" onclick="cambiarVista('alertas', this)">
+          📧 Centro de Alertas y Push <span id="badge-alertas" class="badge-count">0</span>
+        </button>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <!-- RESUMEN ACADÉMICO (MÉTRICAS EN TIEMPO REAL) -->
+      <section class="card summary-card">
+        <div class="section-header-row">
+          <h2>📊 Resumen Académico</h2>
+          <span id="sync-status" class="sync-badge">● Cuenta Sincronizada</span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box total">
+            <span class="stat-number" id="stat-total">0</span>
+            <span class="stat-label">Total Tareas</span>
+          </div>
+          <div class="stat-box pending">
+            <span class="stat-number" id="stat-pendientes">0</span>
+            <span class="stat-label">Pendientes</span>
+          </div>
+          <div class="stat-box completed">
+            <span class="stat-number" id="stat-completadas">0</span>
+            <span class="stat-label">Completadas</span>
+          </div>
+          <div class="stat-box overdue">
+            <span class="stat-number" id="stat-vencidas">0</span>
+            <span class="stat-label">Vencidas</span>
+          </div>
+        </div>
+
+        <div class="progress-wrapper">
+          <div class="progress-info">
+            <span>Avance del Semestre</span>
+            <strong id="stat-porcentaje">0%</strong>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA 1: PANEL Y GESTIÓN DE TAREAS -->
+      <div id="vista-dashboard" class="dashboard-grid">
+        <!-- FORMULARIO REGISTRAR TAREA -->
+        <section class="card form-card">
+          <h2>➕ Registrar Nueva Tarea</h2>
+          <form id="task-form" onsubmit="registrarNuevaTareaUI(event)">
+            <div class="form-group">
+              <label for="tarea-titulo">Título de la Tarea / Evaluación *</label>
+              <input type="text" id="tarea-titulo" required placeholder="Ej. Informe Final de Algoritmos" />
+            </div>
+
+            <div class="form-group">
+              <label for="tarea-curso">Curso / Asignatura *</label>
+              <input type="text" id="tarea-curso" required placeholder="Ej. Algoritmos y Programación" />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="tarea-fecha">Fecha de Entrega *</label>
+                <input type="date" id="tarea-fecha" required />
+              </div>
+              <div class="form-group">
+                <label for="tarea-hora">Hora Límite *</label>
+                <input type="time" id="tarea-hora" value="23:59" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="tarea-prioridad">Nivel de Prioridad *</label>
+              <select id="tarea-prioridad">
+                <option value="Alta">🔴 Prioridad Alta</option>
+                <option value="Media" selected>🟡 Prioridad Media</option>
+                <option value="Baja">🟢 Prioridad Baja</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="tarea-descripcion">Descripción / Notas (Opcional)</label>
+              <textarea id="tarea-descripcion" rows="2" placeholder="Detalles, enlace de aula virtual o requisitos..."></textarea>
+            </div>
+
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="tarea-sync-gcal" checked />
+                <span>Abrir evento en <strong>Google Calendar</strong> al guardar</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="tarea-notificar-correo" checked />
+                <span>Programar alerta push y recordatorio a mi correo</span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+              Guardar en Mi Cuenta
+            </button>
+          </form>
+        </section>
+
+        <!-- LISTADO Y FILTROS DE TAREAS -->
+        <section class="card tasks-card">
+          <div class="tasks-header">
+            <h2>📚 Mis Tareas Académicas</h2>
+
+            <div class="filters-bar">
+              <input type="text" id="filtro-busqueda" placeholder="🔍 Buscar tarea o curso..." oninput="renderizarTareas()" />
+
+              <select id="filtro-prioridad" onchange="renderizarTareas()">
+                <option value="TODAS">Todas las Prioridades</option>
+                <option value="Alta">Prioridad Alta</option>
+                <option value="Media">Prioridad Media</option>
+                <option value="Baja">Prioridad Baja</option>
+              </select>
+
+              <select id="filtro-estado" onchange="renderizarTareas()">
+                <option value="TODOS">Todos los Estados</option>
+                <option value="PENDIENTE">Solo Pendientes</option>
+                <option value="COMPLETADA">Solo Completadas</option>
+                <option value="VENCIDA">Solo Vencidas</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="lista-tareas-contenedor" class="tasks-list">
+            <p class="empty-state">No hay tareas registradas. Agrega tu primera actividad.</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- VISTA 2: CALENDARIO ACADÉMICO INTERACTIVO -->
+      <section id="vista-calendario" class="card hidden">
+        <div class="calendar-header">
+          <div>
+            <h2>📅 Calendario Académico Mensual</h2>
+            <p class="muted-text">Visualiza tus entregas y sincroniza cualquier actividad con Google Calendar.</p>
+          </div>
+          <div class="calendar-controls">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cambiarMesCalendario(-1)">◀ Anterior</button>
+            <strong id="cal-mes-titulo" class="cal-month-label">Mes Año</strong>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cambiarMesCalendario(1)">Siguiente ▶</button>
+          </div>
+        </div>
+        <div id="calendario-grid" class="calendar-grid"></div>
+      </section>
+
+      <!-- VISTA 3: CENTRO DE NOTIFICACIONES PUSH Y CORREO ELECTRÓNICO -->
+      <section id="vista-alertas" class="card hidden">
+        <div class="section-header-row">
+          <div>
+            <h2>📧 Notificaciones Push y Alertas al Correo</h2>
+            <p class="muted-text">
+              Los recordatorios se envían automáticamente a <strong id="alerta-correo-destino">tu correo registrado</strong> y mediante notificaciones Push del navegador.
+            </p>
+          </div>
+          <div class="alert-actions-top">
+            <button type="button" class="btn btn-primary btn-sm" onclick="enviarResumenCorreoAhora()">
+              ✉️ Enviar Resumen a mi Correo Ahora
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="verificarAlertasAhora()">
+              🔄 Comprobar Vencimientos
+            </button>
+          </div>
+        </div>
+
+        <div id="historial-alertas-contenedor" class="alerts-feed">
+          <p class="empty-state">Aún no se han generado alertas en esta sesión.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="main-footer">
+      <p>© 2026 UniPlan - Organizador Académico Universitario | Datos sincronizados en cuenta personal</p>
+    </footer>
+  </div>
+
+  <!-- MODAL EDITAR TAREA -->
+  <div id="modal-editar" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>✏️ Editar Tarea</h2>
+        <button type="button" class="btn-close" onclick="cerrarModalEditar()">✕</button>
+      </div>
+      <form id="edit-form" onsubmit="guardarEdicionTarea(event)">
+        <input type="hidden" id="edit-id" />
+        <div class="form-group">
+          <label for="edit-titulo">Título</label>
+          <input type="text" id="edit-titulo" required />
+        </div>
+        <div class="form-group">
+          <label for="edit-curso">Curso</label>
+          <input type="text" id="edit-curso" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-fecha">Fecha</label>
+            <input type="date" id="edit-fecha" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-hora">Hora</label>
+            <input type="time" id="edit-hora" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="edit-prioridad">Prioridad</label>
+          <select id="edit-prioridad">
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Baja">Baja</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-descripcion">Descripción</label>
+          <textarea id="edit-descripcion" rows="2"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="cerrarModalEditar()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL INTEGRACIONES (EMAILJS + GOOGLE CALENDAR) -->
+  <div id="modal-config" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>⚙️ Configurar Alertas por Correo y Google Calendar</h2>
+        <button type="button" class="btn-close" onclick="cerrarModalConfig()">✕</button>
+      </div>
+      <form onsubmit="guardarConfigIntegraciones(event)">
+        <p class="muted-text" style="margin-bottom: 12px;">
+          El envío a Google Calendar funciona directamente mediante enlace inteligente. Si deseas envío SMTP real silencioso a tu bandeja de entrada desde GitHub Pages, puedes ingresar tus claves gratuitas de <strong>EmailJS</strong> (opcional):
+        </p>
+        <div class="form-group">
+          <label for="cfg-anticipo">Anticipación de alerta Push / Correo (horas antes)</label>
+          <select id="cfg-anticipo">
+            <option value="24">24 horas antes del vencimiento</option>
+            <option value="48">48 horas antes del vencimiento</option>
+            <option value="12">12 horas antes del vencimiento</option>
+            <option value="2">2 horas antes del vencimiento</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="cfg-emailjs-service">EmailJS Service ID (Opcional)</label>
+          <input type="text" id="cfg-emailjs-service" placeholder="service_xxxxxxx" />
+        </div>
+        <div class="form-group">
+          <label for="cfg-emailjs-template">EmailJS Template ID (Opcional)</label>
+          <input type="text" id="cfg-emailjs-template" placeholder="template_xxxxxxx" />
+        </div>
+        <div class="form-group">
+          <label for="cfg-emailjs-pubkey">EmailJS Public Key (Opcional)</label>
+          <input type="text" id="cfg-emailjs-pubkey" placeholder="user_xxxxxxxxxxxx" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="cerrarModalConfig()">Cerrar</button>
+          <button type="submit" class="btn btn-primary">Guardar Preferencias</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST FLOTANTE -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- SDK opcional de EmailJS para correos directos desde el navegador -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
