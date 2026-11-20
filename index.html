@@ -11,7 +11,7 @@
 </head>
 <body>
   <!-- PANTALLA DE ACCESO / REGISTRO DE CUENTA -->
-  <section id="auth-screen" class="auth-wrapper">
+<section id="auth-screen" class="auth-wrapper">
     <div class="auth-card">
       <div class="auth-brand">
         <div class="brand-badge">🎓</div>
@@ -19,29 +19,29 @@
         <p>Organizador Académico Universitario</p>
       </div>
 
-      <div class="auth-tabs">
-        <button type="button" id="tab-login" class="auth-tab active" onclick="cambiarModoAuth('login')">
+      <div class="auth-tabs" role="tablist">
+        <button type="button" id="tab-login" class="auth-tab active">
           Iniciar Sesión
         </button>
-        <button type="button" id="tab-register" class="auth-tab" onclick="cambiarModoAuth('registro')">
+        <button type="button" id="tab-register" class="auth-tab">
           Crear Cuenta
         </button>
       </div>
 
-      <form id="auth-form" onsubmit="manejarAutenticacion(event)">
+      <form id="auth-form" action="javascript:void(0);" novalidate>
         <div id="grupo-nombre" class="form-group hidden">
           <label for="auth-nombre">Nombre Completo</label>
-          <input type="text" id="auth-nombre" placeholder="Ej. Daniel Bracamonte" />
+          <input type="text" id="auth-nombre" autocomplete="name" placeholder="Ej. Daniel Bracamonte" />
         </div>
 
         <div class="form-group">
           <label for="auth-email">Correo Electrónico Universitario / Personal</label>
-          <input type="email" id="auth-email" required placeholder="estudiante@universidad.edu.pe" />
+          <input type="email" id="auth-email" required autocomplete="email" placeholder="estudiante@universidad.edu.pe" />
         </div>
 
         <div class="form-group">
           <label for="auth-password">Contraseña</label>
-          <input type="password" id="auth-password" required minlength="6" placeholder="Mínimo 6 caracteres" />
+          <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" placeholder="Mínimo 6 caracteres" />
         </div>
 
         <div id="auth-error" class="alert-box error hidden"></div>
@@ -56,7 +56,6 @@
       </div>
     </div>
   </section>
-
   <!-- APLICACIÓN PRINCIPAL -->
   <div id="app-screen" class="app-container hidden">
     <!-- HEADER -->
